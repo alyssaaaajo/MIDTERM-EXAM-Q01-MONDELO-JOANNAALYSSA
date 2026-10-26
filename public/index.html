@@ -1,0 +1,168 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Campus Visitor Log System</title>
+</head>
+<body>
+
+    <h1>Campus Visitor Log System</h1>
+
+    <h2>All Visitors</h2>
+    <button onclick="getVisitors()">Show All Visitors</button>
+    <ul id="visitorList"></ul>
+
+    <hr>
+
+    <h2>Search Visitor</h2>
+    <input type="number" id="searchId" placeholder="Enter Visitor ID">
+    <button onclick="searchVisitor()">Search</button>
+    <p id="searchResult"></p>
+
+    <hr>
+
+    <h2>Add Visitor</h2>
+
+    <input type="text" id="visitorName" placeholder="Visitor Name">
+    <br><br>
+
+    <input type="text" id="purpose" placeholder="Purpose">
+    <br><br>
+
+    <input type="text" id="personToVisit" placeholder="Person to Visit">
+    <br><br>
+
+    <input type="date" id="date">
+    <br><br>
+
+    <button onclick="addVisitor()">Add Visitor</button>
+    <p id="addResult"></p>
+
+    <hr>
+
+    <h2>Delete Visitor</h2>
+    <input type="number" id="deleteId" placeholder="Enter Visitor ID">
+    <button onclick="deleteVisitor()">Delete</button>
+    <p id="deleteResult"></p>
+
+    <script>
+
+        // Show all visitors
+        async function getVisitors() {
+            const response = await fetch("/api/visitors");
+            const visitors = await response.json();
+
+            const list = document.getElementById("visitorList");
+            list.innerHTML = "";
+
+            visitors.forEach(visitor => {
+                const li = document.createElement("li");
+
+                li.textContent =
+                    "ID: " + visitor.id +
+                    " | Name: " + visitor.visitor_name +
+                    " | Purpose: " + visitor.purpose +
+                    " | Visiting: " + visitor.person_to_visit +
+                    " | Date: " + visitor.date +
+                    " | Status: " + visitor.status;
+
+                list.appendChild(li);
+            });
+        }
+
+        // Search visitor by ID
+        async function searchVisitor() {
+            const id = document.getElementById("searchId").value;
+
+            if (!id) {
+                alert("Please enter an ID");
+                return;
+            }
+
+            const response = await fetch("/api/visitors/" + id);
+            const visitor = await response.json();
+
+            if (!response.ok) {
+                document.getElementById("searchResult").textContent =
+                    visitor.message;
+                return;
+            }
+
+            document.getElementById("searchResult").textContent =
+                "ID: " + visitor.id +
+                " | Name: " + visitor.visitor_name +
+                " | Purpose: " + visitor.purpose +
+                " | Visiting: " + visitor.person_to_visit +
+                " | Date: " + visitor.date +
+                " | Status: " + visitor.status;
+        }
+
+        // Add visitor
+        async function addVisitor() {
+            const visitor_name = document.getElementById("visitorName").value;
+            const purpose = document.getElementById("purpose").value;
+            const person_to_visit = document.getElementById("personToVisit").value;
+            const date = document.getElementById("date").value;
+
+            if (!visitor_name || !purpose || !person_to_visit || !date) {
+                alert("Please fill in all fields");
+                return;
+            }
+
+            const response = await fetch("/api/visitors", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    visitor_name,
+                    purpose,
+                    person_to_visit,
+                    date
+                })
+            });
+
+            if (response.ok) {
+                document.getElementById("addResult").textContent =
+                    "Visitor added successfully";
+
+                document.getElementById("visitorName").value = "";
+                document.getElementById("purpose").value = "";
+                document.getElementById("personToVisit").value = "";
+                document.getElementById("date").value = "";
+
+                getVisitors();
+            } else {
+                document.getElementById("addResult").textContent =
+                    "Failed to add visitor";
+            }
+        }
+
+        // Delete visitor w/ ID
+        async function deleteVisitor() {
+            const id = document.getElementById("deleteId").value;
+
+            if (!id) {
+                alert("Please enter an ID");
+                return;
+            }
+
+            const response = await fetch("/api/visitors/" + id, {
+                method: "DELETE"
+            });
+
+            const result = await response.json();
+
+            document.getElementById("deleteResult").textContent =
+                result.message;
+
+            getVisitors();
+        }
+
+        // Show visitors (or landing page)
+        getVisitors();
+
+    </script>
+
+</body>
+</html>
